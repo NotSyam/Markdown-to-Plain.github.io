@@ -7,8 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --primary-color: #2b579a; /* Word Blue */
-            --secondary-color: #209a2b; /* Success Green */
+            --primary-color: #2b579a;
+            --secondary-color: #209a2b;
             --bg-body: #f0f2f5;
             --bg-card: #ffffff;
             --text-main: #333;
@@ -16,32 +16,37 @@
             --shadow: 0 8px 30px rgba(0,0,0,0.08);
         }
 
+        /* Penting: Pastikan body tidak bisa scroll, tingginya pas 100% layar */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+        }
+
         body {
             font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-body);
             color: var(--text-main);
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
         }
 
-        /* Header Styling */
+        /* Header Tetap di Atas */
         header {
             background: var(--bg-card);
-            padding: 15px 30px;
+            padding: 12px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex-shrink: 0; /* Header tidak akan mengecil */
             z-index: 10;
         }
 
         .logo-section h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--primary-color);
             display: flex;
             align-items: center;
@@ -54,7 +59,6 @@
             align-items: center;
         }
 
-        /* Input & Button Styling */
         .filename-wrapper {
             display: flex;
             align-items: center;
@@ -62,12 +66,6 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 5px 12px;
-            transition: 0.3s;
-        }
-
-        .filename-wrapper:focus-within {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(43, 87, 154, 0.1);
         }
 
         .filename-wrapper input {
@@ -76,7 +74,7 @@
             outline: none;
             padding: 5px;
             font-size: 14px;
-            width: 180px;
+            width: 150px;
             font-weight: 500;
         }
 
@@ -88,27 +86,24 @@
             font-weight: 600;
             font-size: 14px;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .btn-word { background-color: var(--primary-color); color: white; }
-        .btn-word:hover { background-color: #1e3f72; transform: translateY(-1px); }
+        .btn-word:hover { background-color: #1e3f72; }
 
         .btn-copy { background-color: #e9ecef; color: #495057; }
-        .btn-copy:hover { background-color: #dee2e6; }
 
-        /* Main Layout */
+        /* Area Utama: Mengisi sisa layar */
         main {
             display: flex;
             flex: 1;
             gap: 20px;
             padding: 20px;
+            overflow: hidden; /* Mencegah main body ikut scroll */
             box-sizing: border-box;
-            background: var(--bg-body);
         }
 
+        /* Box Editor & Preview */
         .box {
             flex: 1;
             display: flex;
@@ -116,31 +111,34 @@
             background: var(--bg-card);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
+            min-width: 0; /* Penting untuk flex item agar bisa menciut */
         }
 
         .box-header {
-            padding: 12px 20px;
+            padding: 10px 20px;
             background: #f8f9fa;
             border-bottom: 1px solid #eee;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: #888;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
+        /* Area Scrollable */
         textarea, #preview {
             flex: 1;
             padding: 25px;
             border: none;
             outline: none;
-            overflow-y: auto;
+            overflow-y: auto; /* Scroll muncul di sini */
             font-size: 15px;
             line-height: 1.7;
+            word-wrap: break-word;
         }
 
         textarea {
@@ -150,45 +148,22 @@
             color: #d4d4d4;
         }
 
-        /* Preview Styling (Web) */
         #preview {
             background: white;
             color: #222;
         }
 
-        #preview h1, #preview h2, #preview h3 {
-            color: var(--primary-color);
-            margin-top: 0;
-        }
+        /* Preview Styling (Web) */
+        #preview h1, #preview h2 { color: var(--primary-color); }
+        #preview table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+        #preview th, #preview td { border: 1px solid #eee; padding: 10px; }
 
-        #preview blockquote {
-            border-left: 4px solid #ddd;
-            margin-left: 0;
-            padding-left: 15px;
-            color: #666;
-            font-style: italic;
-        }
-
-        #preview table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-
-        #preview th, #preview td {
-            border: 1px solid #eee;
-            padding: 10px;
-            text-align: left;
-        }
-
-        #preview th { background: #f8f9fa; }
-
-        /* Responsive */
+        /* Mobile Optimization */
         @media (max-width: 768px) {
-            main { flex-direction: column; }
-            header { flex-direction: column; gap: 15px; height: auto; }
-            .controls { width: 100%; flex-wrap: wrap; justify-content: center; }
-            .filename-wrapper { width: 100%; }
+            header { flex-direction: column; height: auto; padding: 10px; }
+            main { flex-direction: column; overflow-y: auto; }
+            .box { flex: none; height: 400px; margin-bottom: 20px; }
+            .controls { width: 100%; justify-content: space-between; }
         }
     </style>
 </head>
@@ -196,27 +171,22 @@
 
     <header>
         <div class="logo-section">
-            <h1><span>✍️</span> Markdown Pro</h1>
+            <h1><span></span> Markdown Pro</h1>
         </div>
         
         <div class="controls">
             <div class="filename-wrapper">
-                <span style="font-size: 12px; color: #999;">Nama:</span>
                 <input type="text" id="file-name" placeholder="nama-file" value="Dokumen_Baru">
                 <span style="font-size: 12px; color: #999;">.doc</span>
             </div>
             
-            <button class="btn btn-copy" onclick="copyCleanText()">
-                Copy Text
-            </button>
-            
-            <button class="btn btn-word" onclick="downloadWord()">
-                Download Word
-            </button>
+            <button class="btn btn-copy" onclick="copyCleanText()">Copy</button>
+            <button class="btn btn-word" onclick="downloadWord()">Download Word</button>
         </div>
     </header>
 
     <main>
+        <!-- BOX KIRI: EDITOR -->
         <div class="box">
             <div class="box-header">
                 <span>Editor Markdown</span>
@@ -225,8 +195,9 @@
             <textarea id="markdown-input" placeholder="Tulis markdown di sini..."></textarea>
         </div>
 
+        <!-- BOX KANAN: PREVIEW -->
         <div class="box">
-            <div class="box-header">Preview Dokumen</div>
+            <div class="box-header">Preview (Arial 11pt)</div>
             <div id="preview"></div>
         </div>
     </main>
@@ -249,68 +220,50 @@
             const content = preview.innerHTML;
             if (!content) { alert("Teks masih kosong!"); return; }
 
-            let fileName = fileNameInput.value.trim() || "Dokumen_Tanpa_Nama";
+            let fileName = fileNameInput.value.trim() || "Dokumen_Baru";
 
-            // CSS Khusus untuk Microsoft Word
             const styles = `
                 <style>
-                    @page {
-                        margin: 2.54cm; /* Standar margin 1 inch */
-                    }
                     body {
                         font-family: "Arial", sans-serif;
                         font-size: 11pt;
                         line-height: 1.5;
                     }
-                    h1 { font-size: 16pt; color: #2b579a; font-weight: bold; }
-                    h2 { font-size: 14pt; color: #2b579a; font-weight: bold; }
-                    h3 { font-size: 12pt; font-weight: bold; }
+                    h1 { font-size: 16pt; color: #2b579a; }
+                    h2 { font-size: 14pt; color: #2b579a; }
                     table { border-collapse: collapse; width: 100%; }
-                    td, th { border: 1px solid #000; padding: 5px; font-size: 11pt; }
-                    blockquote { border-left: 3px solid #ccc; padding-left: 10px; color: #555; }
+                    td, th { border: 1px solid #000; padding: 5px; }
                 </style>
             `;
 
-            // Template Full HTML untuk Word
             const header = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' 
                       xmlns:w='urn:schemas-microsoft-com:office:word' 
                       xmlns='http://www.w3.org/TR/REC-html40'>
-                <head>
-                    <meta charset="utf-8">
-                    ${styles}
-                </head>
-                <body>
-                    ${content}
-                </body>
+                <head><meta charset="utf-8">${styles}</head>
+                <body>${content}</body>
                 </html>`;
             
-            const blob = new Blob(['\ufeff', header], {
-                type: 'application/msword'
-            });
-
+            const blob = new Blob(['\ufeff', header], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
             link.download = fileName + '.doc';
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
         }
 
-        // 3. Copy Clean Text
+        // 3. Copy Text
         function copyCleanText() {
             const text = preview.innerText;
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.querySelector('.btn-copy');
-                const originalText = btn.innerText;
-                btn.innerText = "Copied! ✅";
-                setTimeout(() => btn.innerText = originalText, 2000);
+                btn.innerText = "Copied!";
+                setTimeout(() => btn.innerText = "Copy", 2000);
             });
         }
 
-        // Default content
-        input.value = "# Judul Laporan\n\nIni adalah contoh teks yang akan diubah ke **Word** dengan font **Arial 11pt**.\n\n### Fitur Utama:\n1. Font Arial Otomatis\n2. Ukuran 11pt\n3. UI Modern & Responsif\n\n> Coba ubah nama file di atas lalu klik Download!";
+        // Isi Default agar terlihat fitur scrollnya
+        input.value = "# Cek Scroll\n\n" + Array(50).fill("Ini adalah baris contoh untuk mengetes scrollbar.\n").join("\n");
         input.dispatchEvent(new Event('input'));
     </script>
 </body>
