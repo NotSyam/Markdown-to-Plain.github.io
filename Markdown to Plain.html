@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to Word Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Agar rapi di layar kecil */
+            gap: 10px;
+        }
+        h1 { margin: 0; color: #333; font-size: 24px; }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Styling Input Nama File */
+        .filename-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 180px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-word { background-color: #2b579a; color: white; }
+        .btn-word:hover { background-color: #1e3f72; }
+        
+        .btn-copy { background-color: #209a2b; color: white; }
+        .btn-copy:hover { background-color: #166e1e; }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            height: 80%;
+        }
+        .box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .box-header {
+            padding: 10px;
+            background: #e9ecef;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea, #preview {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            outline: none;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        textarea {
+            resize: none;
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+        }
+        #preview { color: #000; }
+        #preview h1, #preview h2 { color: #2b579a; }
+        #preview blockquote {
+            border-left: 4px solid #ccc;
+            padding-left: 10px;
+            color: #666;
+        }
+        #preview table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #preview th, #preview td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Markdown ➜ Word 📝</h1>
+        <div class="controls">
+            <!-- Input Nama File Baru -->
+            <input type="text" id="file-name" class="filename-input" placeholder="Nama file..." value="Dokumen_Saya">
+            
+            <button class="btn btn-copy" onclick="copyCleanText()">Copy Bersih (Plain)</button>
+            <button class="btn btn-word" onclick="downloadWord()">Download .doc</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="box">
+            <div class="box-header">Input Markdown</div>
+            <textarea id="markdown-input" placeholder="Ketik Markdown di sini..."></textarea>
+        </div>
+
+        <div class="box">
+            <div class="box-header">Preview Hasil</div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('markdown-input');
+        const preview = document.getElementById('preview');
+        const fileNameInput = document.getElementById('file-name');
+
+        // 1. Fungsi Live Preview
+        input.addEventListener('input', () => {
+            const text = input.value;
+            preview.innerHTML = marked.parse(text);
+        });
+
+        // 2. Fungsi Download ke Word (.doc)
+        function downloadWord() {
+            const content = preview.innerHTML;
+            if (!content) { alert("Isi dulu teksnya bro!"); return; }
+
+            // Mengambil nama file dari input, jika kosong pakai default
+            let fileName = fileNameInput.value.trim();
+            if (!fileName) { fileName = "Dokumen_Saya"; }
+
+            // Template HTML agar Word membacanya dengan benar
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                           "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                           "xmlns='http://www.w3.org/TR/REC-html40'>";
+            const body = "<body>" + content + "</body></html>";
+            
+            const blob = new Blob(['\ufeff', header + body], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Menggunakan nama file dari input + ekstensi .doc
+            link.download = fileName + '.doc';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 3. Fungsi Copy Text Only
+        function copyCleanText() {
+            const text = preview.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Teks bersih berhasil dicopy!");
+            });
+        }
+
+        // Default content
+        input.value = "# Halo Bro!\n\nIni adalah **converter** simpel.\n\n* List 1\n* List 2\n\nSilakan ubah nama file di atas sebelum download!";
+        input.dispatchEvent(new Event('input'));
+    </script>
+</body>
+</html>
