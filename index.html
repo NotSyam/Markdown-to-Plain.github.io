@@ -1,270 +1,447 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown to Word Converter Pro</title>
+    <script src="https://cdn.tailwindcss.com/3.4.5"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root {
-            --primary-color: #2b579a;
-            --secondary-color: #209a2b;
-            --bg-body: #f0f2f5;
-            --bg-card: #ffffff;
-            --text-main: #333;
-            --border-radius: 12px;
-            --shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
-
-        /* Penting: Pastikan body tidak bisa scroll, tingginya pas 100% layar */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; 
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
         body {
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            overflow: hidden;
         }
-
-        /* Header Tetap di Atas */
-        header {
-            background: var(--bg-card);
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            flex-shrink: 0; /* Header tidak akan mengecil */
-            z-index: 10;
+        
+        .editor-font {
+            font-family: 'JetBrains Mono', monospace;
         }
-
-        .logo-section h1 {
-            margin: 0;
-            font-size: 1.3rem;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        
+        .preview-content h1 { font-size: 2em; font-weight: 700; margin-bottom: 0.5em; border-bottom: 2px solid #334155; padding-bottom: 0.3em; }
+        .preview-content h2 { font-size: 1.5em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; }
+        .preview-content h3 { font-size: 1.25em; font-weight: 600; margin-top: 0.8em; margin-bottom: 0.4em; }
+        .preview-content h4 { font-size: 1.1em; font-weight: 600; margin-top: 0.6em; margin-bottom: 0.3em; }
+        .preview-content p { margin-bottom: 1em; line-height: 1.7; }
+        .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; }
+        .preview-content li { margin-bottom: 0.3em; }
+        .preview-content code { 
+            background: #1e293b; 
+            padding: 0.2em 0.4em; 
+            border-radius: 0.25em; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.9em;
+            color: #22d3ee;
         }
-
-        .controls {
-            display: flex;
-            gap: 12px;
-            align-items: center;
+        .preview-content pre { 
+            background: #1e293b; 
+            padding: 1em; 
+            border-radius: 0.5em; 
+            overflow-x: auto; 
+            margin-bottom: 1em;
         }
-
-        .filename-wrapper {
-            display: flex;
-            align-items: center;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 5px 12px;
+        .preview-content pre code { 
+            background: transparent; 
+            padding: 0; 
+            color: #e2e8f0;
         }
-
-        .filename-wrapper input {
-            border: none;
-            background: transparent;
-            outline: none;
-            padding: 5px;
-            font-size: 14px;
-            width: 150px;
-            font-weight: 500;
+        .preview-content blockquote {
+            border-left: 4px solid #6366f1;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #94a3b8;
+            font-style: italic;
         }
-
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
+        .preview-content a { color: #60a5fa; text-decoration: underline; }
+        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+        .preview-content th, .preview-content td { border: 1px solid #334155; padding: 0.5em; text-align: left; }
+        .preview-content th { background: #1e293b; font-weight: 600; }
+        .preview-content hr { border: none; border-top: 2px solid #334155; margin: 1.5em 0; }
+        .preview-content img { max-width: 100%; border-radius: 0.5em; margin: 1em 0; }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
         }
-
-        .btn-word { background-color: var(--primary-color); color: white; }
-        .btn-word:hover { background-color: #1e3f72; }
-
-        .btn-copy { background-color: #e9ecef; color: #495057; }
-
-        /* Area Utama: Mengisi sisa layar */
-        main {
-            display: flex;
-            flex: 1;
-            gap: 20px;
-            padding: 20px;
-            overflow: hidden; /* Mencegah main body ikut scroll */
-            box-sizing: border-box;
+        
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        /* Box Editor & Preview */
-        .box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-card);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0,0,0,0.05);
-            min-width: 0; /* Penting untuk flex item agar bisa menciut */
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: #1e293b;
         }
-
-        .box-header {
-            padding: 10px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            flex-shrink: 0;
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
         }
-
-        /* Area Scrollable */
-        textarea, #preview {
-            flex: 1;
-            padding: 25px;
-            border: none;
-            outline: none;
-            overflow-y: auto; /* Scroll muncul di sini */
-            font-size: 15px;
-            line-height: 1.7;
-            word-wrap: break-word;
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
         }
-
-        textarea {
-            resize: none;
-            font-family: 'Fira Code', 'Consolas', monospace;
-            background-color: #1e1e1e;
-            color: #d4d4d4;
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            transition: all 0.2s;
         }
-
-        #preview {
-            background: white;
-            color: #222;
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-
-        /* Preview Styling (Web) */
-        #preview h1, #preview h2 { color: var(--primary-color); }
-        #preview table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-        #preview th, #preview td { border: 1px solid #eee; padding: 10px; }
-
-        /* Mobile Optimization */
-        @media (max-width: 768px) {
-            header { flex-direction: column; height: auto; padding: 10px; }
-            main { flex-direction: column; overflow-y: auto; }
-            .box { flex: none; height: 400px; margin-bottom: 20px; }
-            .controls { width: 100%; justify-content: space-between; }
+        
+        .btn-gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .btn-gradient-blue:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-gradient-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .btn-gradient-green:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .counter-badge {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.2s;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+        }
+        
+        .animate-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .toast {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .toast.show {
+            transform: translateX(0);
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col text-slate-200">
 
-    <header>
-        <div class="logo-section">
-            <h1><span></span> Markdown Pro</h1>
+    <!-- Header -->
+    <header class="glass-panel border-b border-slate-700/50 px-6 py-3 flex items-center justify-between shrink-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg animate-glow">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight">Markdown Pro</h1>
+                <p class="text-xs text-slate-400">Convert & Export with ease</p>
+            </div>
         </div>
         
-        <div class="controls">
-            <div class="filename-wrapper">
-                <input type="text" id="file-name" placeholder="nama-file" value="Dokumen_Baru">
-                <span style="font-size: 12px; color: #999;">.doc</span>
-            </div>
-            
-            <button class="btn btn-copy" onclick="copyCleanText()">Copy</button>
-            <button class="btn btn-word" onclick="downloadWord()">Download Word</button>
+        <!-- Filename Input -->
+        <div class="flex items-center gap-3 mx-6">
+            <label for="filenameInput" class="text-sm text-slate-400 font-medium hidden sm:inline">File Name:</label>
+            <input type="text" id="filenameInput" value="my-document" 
+                   class="bg-slate-800/80 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white w-48 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-500 shadow-sm">
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="flex items-center gap-2">
+            <button id="downloadDoc" class="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Word
+            </button>
+            <button id="downloadPdf" class="btn-gradient-blue px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                PDF
+            </button>
+            <button id="downloadTxt" class="btn-gradient-green px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                TXT
+            </button>
         </div>
     </header>
 
-    <main>
-        <!-- BOX KIRI: EDITOR -->
-        <div class="box">
-            <div class="box-header">
-                <span>Editor Markdown</span>
-                <span id="char-count">0 karakter</span>
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Editor Panel -->
+        <section class="flex-1 flex flex-col border-r border-slate-700/50">
+            <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700/50 flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-300 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editor Markdown
+                </span>
+                <button id="clearEditor" class="text-xs text-slate-400 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-red-400/10">
+                    Clear
+                </button>
             </div>
-            <textarea id="markdown-input" placeholder="Tulis markdown di sini..."></textarea>
-        </div>
+            <textarea 
+                id="markdownInput" 
+                class="flex-1 w-full bg-slate-900/50 p-6 editor-font text-sm resize-none outline-none scrollbar-custom focus:bg-slate-900/70 transition-colors"
+                placeholder="Type your markdown here..."
+                spellcheck="false"
+            ># Welcome to Markdown Pro
 
-        <!-- BOX KANAN: PREVIEW -->
-        <div class="box">
-            <div class="box-header">Preview (Arial 11pt)</div>
-            <div id="preview"></div>
-        </div>
+## Features
+- Convert to **Word**, **PDF**, or **TXT**
+- Real-time preview
+- Character & word counts
+
+## Example Code
+
+\`\`\`javascript
+console.log("Hello World!");
+\`\`\`
+
+> This is a blockquote example
+
+---
+
+### Try it now!
+
+Start typing in the editor to see changes.</textarea>
+            <!-- Character Counter -->
+            <div class="px-4 py-2 bg-slate-800/50 border-t border-slate-700/50 flex items-center justify-end">
+                <span id="charCount" class="text-xs text-slate-400 font-mono">0 characters</span>
+            </div>
+        </section>
+
+        <!-- Preview Panel -->
+        <section class="flex-1 flex flex-col">
+            <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700/50 flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-300 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Preview
+                </span>
+                <span class="text-xs text-slate-500">Arial 11pt</span>
+            </div>
+            <div id="preview" class="flex-1 p-8 overflow-y-auto scrollbar-custom preview-content text-slate-200 bg-slate-900/30" style="font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6;">
+                <!-- Preview content will be rendered here -->
+            </div>
+        </section>
     </main>
 
-    <script>
-        const input = document.getElementById('markdown-input');
-        const preview = document.getElementById('preview');
-        const fileNameInput = document.getElementById('file-name');
-        const charCount = document.getElementById('char-count');
+    <!-- Stats Bar -->
+    <footer class="glass-panel border-t border-slate-700/50 px-6 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
+                <span class="text-xs font-medium">Words:</span>
+                <span id="wordCount" class="text-sm font-bold text-indigo-400 font-mono">0</span>
+            </div>
+            <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-cyan-400"></div>
+                <span class="text-xs font-medium">Sentences:</span>
+                <span id="sentenceCount" class="text-sm font-bold text-cyan-400 font-mono">0</span>
+            </div>
+            <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <span class="text-xs font-medium">Paragraphs:</span>
+                <span id="paragraphCount" class="text-sm font-bold text-emerald-400 font-mono">0</span>
+            </div>
+        </div>
+        <div class="text-xs text-slate-500">
+            Markdown Pro v2.0
+        </div>
+    </footer>
 
-        // 1. Live Preview Logic
-        input.addEventListener('input', () => {
-            const text = input.value;
+    <!-- Toast Notification -->
+    <div id="toast" class="toast fixed bottom-6 right-6 z-50">
+        <div class="bg-slate-800 border border-slate-600 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3">
+            <div id="toastIcon" class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <span id="toastMessage" class="text-sm font-medium">Download successful!</span>
+        </div>
+    </div>
+
+    <script>
+        const markdownInput = document.getElementById('markdownInput');
+        const preview = document.getElementById('preview');
+        const charCount = document.getElementById('charCount');
+        const wordCount = document.getElementById('wordCount');
+        const sentenceCount = document.getElementById('sentenceCount');
+        const paragraphCount = document.getElementById('paragraphCount');
+        const clearBtn = document.getElementById('clearEditor');
+        const downloadDocBtn = document.getElementById('downloadDoc');
+        const downloadPdfBtn = document.getElementById('downloadPdf');
+        const downloadTxtBtn = document.getElementById('downloadTxt');
+        const filenameInput = document.getElementById('filenameInput');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        function getCleanFilename() {
+            let name = filenameInput.value.trim();
+            // Remove extensions if user typed them manually
+            name = name.replace(/\.(doc|docx|pdf|txt)$/i, '');
+            if (!name) return 'document';
+            // Remove illegal characters for filenames
+            return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+        }
+
+        function updateCounts() {
+            const text = markdownInput.value;
+            
+            // Character count
+            charCount.textContent = `${text.length} characters`;
+            
+            // Word count
+            const words = text.trim() === '' ? [] : text.trim().split(/\s+/);
+            wordCount.textContent = words.length;
+            
+            // Sentence count
+            const sentences = text.match(/[^.!?]*[.!?]+/g) || [];
+            sentenceCount.textContent = sentences.length;
+            
+            // Paragraph count
+            const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
+            paragraphCount.textContent = paragraphs.length;
+            
+            // Update preview
             preview.innerHTML = marked.parse(text);
-            charCount.innerText = `${text.length} karakter`;
+        }
+
+        markdownInput.addEventListener('input', updateCounts);
+        
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all content?')) {
+                markdownInput.value = '';
+                updateCounts();
+                showToast('Editor cleared');
+            }
         });
 
-        // 2. Download Word dengan Format Arial 11pt
-        function downloadWord() {
-            const content = preview.innerHTML;
-            if (!content) { alert("Teks masih kosong!"); return; }
-
-            let fileName = fileNameInput.value.trim() || "Dokumen_Baru";
-
-            const styles = `
-                <style>
-                    body {
-                        font-family: "Arial", sans-serif;
-                        font-size: 11pt;
-                        line-height: 1.5;
-                    }
-                    h1 { font-size: 16pt; color: #2b579a; }
-                    h2 { font-size: 14pt; color: #2b579a; }
-                    table { border-collapse: collapse; width: 100%; }
-                    td, th { border: 1px solid #000; padding: 5px; }
-                </style>
-            `;
-
-            const header = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-                      xmlns:w='urn:schemas-microsoft-com:office:word' 
-                      xmlns='http://www.w3.org/TR/REC-html40'>
-                <head><meta charset="utf-8">${styles}</head>
-                <body>${content}</body>
-                </html>`;
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            const iconContainer = document.getElementById('toastIcon');
             
-            const blob = new Blob(['\ufeff', header], { type: 'application/msword' });
+            if (type === 'success') {
+                iconContainer.className = 'w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center';
+                iconContainer.innerHTML = `<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
+            } else {
+                iconContainer.className = 'w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center';
+                iconContainer.innerHTML = `<svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Download as Word
+        downloadDocBtn.addEventListener('click', () => {
+            const filename = getCleanFilename();
+            const content = marked.parse(markdownInput.value);
+            const html = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>${filename}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+                        h1 { font-size: 24pt; font-weight: bold; margin-bottom: 12pt; color: #1e293b; }
+                        h2 { font-size: 18pt; font-weight: bold; margin-bottom: 10pt; color: #1e293b; }
+                        h3 { font-size: 14pt; font-weight: bold; margin-bottom: 8pt; color: #334155; }
+                        p { margin-bottom: 8pt; }
+                        pre { background: #f5f5f5; padding: 10pt; font-family: monospace; font-size: 10pt; border: 1px solid #ddd; }
+                        code { background: #f5f5f5; padding: 2pt 4pt; font-family: monospace; font-size: 10pt; color: #d93866; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }
+                        th, td { border: 1px solid #ccc; padding: 8pt; text-align: left; }
+                        th { background: #f0f0f0; font-weight: bold; }
+                        blockquote { border-left: 4px solid #ccc; margin: 10pt 0; padding-left: 10pt; color: #666; font-style: italic; }
+                        a { color: #2563eb; text-decoration: underline; }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName + '.doc';
-            link.click();
-        }
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`Word document '${filename}.doc' downloaded!`);
+        });
 
-        // 3. Copy Text
-        function copyCleanText() {
-            const text = preview.innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.querySelector('.btn-copy');
-                btn.innerText = "Copied!";
-                setTimeout(() => btn.innerText = "Copy", 2000);
+        // Download as PDF
+        downloadPdfBtn.addEventListener('click', () => {
+            const filename = getCleanFilename();
+            const element = preview;
+            const opt = {
+                margin: 0.75,
+                filename: `${filename}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff' // White background for PDF
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'letter', 
+                    orientation: 'portrait'
+                }
+            };
+            
+            showToast(`Generating '${filename}.pdf'...`);
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast(`PDF '${filename}.pdf' downloaded!`);
+            }).catch(err => {
+                showToast('PDF generation failed!', 'error');
+                console.error(err);
             });
-        }
+        });
 
-        // Isi Default agar terlihat fitur scrollnya
-        input.value = "# Cek Scroll\n\n" + Array(3).fill("Hidup Jokowi!!!\n").join("\n");
-        input.dispatchEvent(new Event('input'));
+        // Download as TXT
+        downloadTxtBtn.addEventListener('click', () => {
+            const filename = getCleanFilename();
+            const text = markdownInput.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`TXT file '${filename}.txt' downloaded!`);
+        });
+
+        // Initialize
+        updateCounts();
     </script>
 </body>
 </html>
