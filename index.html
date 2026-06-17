@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,79 +7,121 @@
     <script src="https://cdn.tailwindcss.com/3.4.5"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151d2f', // Custom darker shade
+                            950: '#050914', // Custom darkest shade
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        .editor-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        /* Scrollbar Styling */
+        .scrollbar-custom::-webkit-scrollbar { width: 8px; height: 8px; }
+        .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }
         
-        .preview-content h1 { font-size: 2em; font-weight: 700; margin-bottom: 0.5em; border-bottom: 2px solid #334155; padding-bottom: 0.3em; }
+        /* Dark Mode Scrollbar */
+        html.dark .scrollbar-custom::-webkit-scrollbar-track { background: #0f172a; }
+        html.dark .scrollbar-custom::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        html.dark .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Light Mode Scrollbar */
+        html:not(.dark) .scrollbar-custom::-webkit-scrollbar-track { background: #f1f5f9; }
+        html:not(.dark) .scrollbar-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        html:not(.dark) .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Preview Content Styling */
+        .preview-content { transition: color 0.3s ease; }
+        
+        /* Headings */
+        .preview-content h1 { font-size: 2em; font-weight: 700; margin-bottom: 0.5em; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
         .preview-content h2 { font-size: 1.5em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; }
         .preview-content h3 { font-size: 1.25em; font-weight: 600; margin-top: 0.8em; margin-bottom: 0.4em; }
-        .preview-content h4 { font-size: 1.1em; font-weight: 600; margin-top: 0.6em; margin-bottom: 0.3em; }
         .preview-content p { margin-bottom: 1em; line-height: 1.7; }
         .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; }
         .preview-content li { margin-bottom: 0.3em; }
-        .preview-content code { 
-            background: #1e293b; 
-            padding: 0.2em 0.4em; 
-            border-radius: 0.25em; 
-            font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.9em;
-            color: #22d3ee;
-        }
-        .preview-content pre { 
-            background: #1e293b; 
-            padding: 1em; 
-            border-radius: 0.5em; 
-            overflow-x: auto; 
-            margin-bottom: 1em;
-        }
-        .preview-content pre code { 
-            background: transparent; 
-            padding: 0; 
-            color: #e2e8f0;
-        }
-        .preview-content blockquote {
-            border-left: 4px solid #6366f1;
-            padding-left: 1em;
-            margin: 1em 0;
-            color: #94a3b8;
-            font-style: italic;
-        }
-        .preview-content a { color: #60a5fa; text-decoration: underline; }
-        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-        .preview-content th, .preview-content td { border: 1px solid #334155; padding: 0.5em; text-align: left; }
-        .preview-content th { background: #1e293b; font-weight: 600; }
-        .preview-content hr { border: none; border-top: 2px solid #334155; margin: 1.5em 0; }
-        .preview-content img { max-width: 100%; border-radius: 0.5em; margin: 1em 0; }
         
+        /* Code */
+        .preview-content code { background: var(--code-bg); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: var(--code-text); }
+        .preview-content pre { background: var(--code-bg); padding: 1em; border-radius: 0.5em; overflow-x: auto; margin-bottom: 1em; border: 1px solid var(--border-color); }
+        .preview-content pre code { background: transparent; padding: 0; color: var(--text-color); }
+        
+        /* Blockquote */
+        .preview-content blockquote { border-left: 4px solid var(--primary-color); padding-left: 1em; margin: 1em 0; color: var(--text-secondary); font-style: italic; }
+        
+        /* Links */
+        .preview-content a { color: var(--link-color); text-decoration: underline; }
+        
+        /* Tables - Fixed Visibility */
+        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1em; border: 1px solid var(--border-color); }
+        .preview-content th, .preview-content td { border: 1px solid var(--border-color); padding: 0.6em; text-align: left; }
+        .preview-content th { background: var(--table-header-bg); font-weight: 600; color: var(--table-header-text); }
+        .preview-content td { background: var(--table-cell-bg); color: var(--text-color); }
+        .preview-content tr:nth-child(even) td { background: var(--table-alt-bg); }
+        
+        /* HR */
+        .preview-content hr { border: none; border-top: 2px solid var(--border-color); margin: 1.5em 0; }
+        
+        /* Images */
+        .preview-content img { max-width: 100%; border-radius: 0.5em; margin: 1em 0; border: 1px solid var(--border-color); }
+
+        /* CSS Variables for Theming */
+        html.dark {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --border-color: #334155;
+            --text-color: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --code-bg: #1e293b;
+            --code-text: #22d3ee;
+            --primary-color: #6366f1;
+            --link-color: #60a5fa;
+            --table-header-bg: #1e293b;
+            --table-header-text: #f8fafc;
+            --table-cell-bg: #0f172a;
+            --table-alt-bg: #162032;
+        }
+        
+        html:not(.dark) {
+            --bg-color: #f8fafc;
+            --panel-bg: rgba(255, 255, 255, 0.8);
+            --border-color: #cbd5e1;
+            --text-color: #334155;
+            --text-secondary: #64748b;
+            --code-bg: #f1f5f9;
+            --code-text: #0369a1;
+            --primary-color: #4f46e5;
+            --link-color: #2563eb;
+            --table-header-bg: #e2e8f0;
+            --table-header-text: #0f172a;
+            --table-cell-bg: #ffffff;
+            --table-alt-bg: #f8fafc;
+        }
+
+        /* UI Components */
         .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .scrollbar-custom::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
         
         .btn-gradient {
@@ -113,29 +155,43 @@
             border: 1px solid rgba(99, 102, 241, 0.3);
             transition: all 0.2s;
         }
-        
+
+        /* Input Styles */
+        .theme-input {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        .theme-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+        .theme-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Editor Textarea */
+        .editor-textarea {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Animations */
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); }
             50% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
         }
+        .animate-glow { animation: pulse-glow 3s infinite; }
         
-        .animate-glow {
-            animation: pulse-glow 2s infinite;
-        }
-        
-        .toast {
-            transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
-        }
-        .toast.show {
-            transform: translateX(0);
-        }
+        .toast { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .toast.show { transform: translateX(0); }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col text-slate-200">
+<body class="h-screen w-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)]">
 
     <!-- Header -->
-    <header class="glass-panel border-b border-slate-700/50 px-6 py-3 flex items-center justify-between shrink-0 z-10">
+    <header class="glass-panel border-b border-[var(--border-color)] px-6 py-3 flex items-center justify-between shrink-0 z-10">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg animate-glow">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,33 +199,50 @@
                 </svg>
             </div>
             <div>
-                <h1 class="font-bold text-lg tracking-tight">Markdown Pro</h1>
-                <p class="text-xs text-slate-400">Convert & Export with ease</p>
+                <h1 class="font-bold text-lg tracking-tight text-[var(--text-color)]">Markdown Pro</h1>
+                <p class="text-xs text-[var(--text-secondary)]">Convert & Export with ease</p>
             </div>
         </div>
         
         <!-- Filename Input -->
         <div class="flex items-center gap-3 mx-6">
-            <label for="filenameInput" class="text-sm text-slate-400 font-medium hidden sm:inline">File Name:</label>
-            <input type="text" id="filenameInput" value="my-document" 
-                   class="bg-slate-800/80 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white w-48 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-500 shadow-sm">
+            <label for="filenameInput" class="text-sm text-[var(--text-secondary)] font-medium hidden md:inline">File Name:</label>
+            <div class="relative">
+                <input type="text" id="filenameInput" value="my-document" 
+                       class="theme-input rounded-lg px-3 py-1.5 text-sm w-48 transition-all shadow-sm">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none text-xs">
+                    .doc
+                </div>
+            </div>
         </div>
 
-        <!-- Download Buttons -->
-        <div class="flex items-center gap-2">
-            <button id="downloadDoc" class="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+        <div class="flex items-center gap-3">
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="p-2 rounded-lg hover:bg-[var(--code-bg)] text-[var(--text-secondary)] transition-colors border border-[var(--border-color)]" title="Toggle Theme">
+                <!-- Sun Icon (for Light Mode) -->
+                <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <!-- Moon Icon (for Dark Mode) -->
+                <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+
+            <!-- Download Buttons -->
+            <button id="downloadDoc" class="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium text-white whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Word
             </button>
-            <button id="downloadPdf" class="btn-gradient-blue px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+            <button id="downloadPdf" class="btn-gradient-blue px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium text-white whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 PDF
             </button>
-            <button id="downloadTxt" class="btn-gradient-green px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+            <button id="downloadTxt" class="btn-gradient-green px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium text-white whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -181,21 +254,21 @@
     <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden">
         <!-- Editor Panel -->
-        <section class="flex-1 flex flex-col border-r border-slate-700/50">
-            <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700/50 flex items-center justify-between">
-                <span class="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="flex-1 flex flex-col border-r border-[var(--border-color)]">
+            <div class="px-4 py-2 border-b border-[var(--border-color)] flex items-center justify-between" style="background: var(--code-bg);">
+                <span class="text-sm font-medium flex items-center gap-2" style="color: var(--text-color);">
+                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Editor Markdown
                 </span>
-                <button id="clearEditor" class="text-xs text-slate-400 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-red-400/10">
+                <button id="clearEditor" class="text-xs hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-red-400/10" style="color: var(--text-secondary);">
                     Clear
                 </button>
             </div>
             <textarea 
                 id="markdownInput" 
-                class="flex-1 w-full bg-slate-900/50 p-6 editor-font text-sm resize-none outline-none scrollbar-custom focus:bg-slate-900/70 transition-colors"
+                class="flex-1 w-full p-6 font-mono text-sm resize-none outline-none scrollbar-custom editor-textarea transition-colors"
                 placeholder="Type your markdown here..."
                 spellcheck="false"
             ># Welcome to Markdown Pro
@@ -203,7 +276,15 @@
 ## Features
 - Convert to **Word**, **PDF**, or **TXT**
 - Real-time preview
-- Character & word counts
+- Dark & Light Mode
+
+## Example Table
+
+| Feature | Status | Notes |
+|---|---|---|
+| Live Preview | ✅ Fixed | |
+| Tables | ✅ Fixed | Visible now |
+| Theme | ✅ Added | Toggle button |
 
 ## Example Code
 
@@ -219,49 +300,49 @@ console.log("Hello World!");
 
 Start typing in the editor to see changes.</textarea>
             <!-- Character Counter -->
-            <div class="px-4 py-2 bg-slate-800/50 border-t border-slate-700/50 flex items-center justify-end">
-                <span id="charCount" class="text-xs text-slate-400 font-mono">0 characters</span>
+            <div class="px-4 py-2 border-t border-[var(--border-color)] flex items-center justify-end" style="background: var(--code-bg);">
+                <span id="charCount" class="text-xs font-mono opacity-70">0 characters</span>
             </div>
         </section>
 
         <!-- Preview Panel -->
-        <section class="flex-1 flex flex-col">
-            <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700/50 flex items-center justify-between">
-                <span class="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="flex-1 flex flex-col bg-[var(--bg-color)]">
+            <div class="px-4 py-2 border-b border-[var(--border-color)] flex items-center justify-between" style="background: var(--code-bg);">
+                <span class="text-sm font-medium flex items-center gap-2" style="color: var(--text-color);">
+                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                     Preview
                 </span>
-                <span class="text-xs text-slate-500">Arial 11pt</span>
+                <span class="text-xs opacity-50">Arial 11pt</span>
             </div>
-            <div id="preview" class="flex-1 p-8 overflow-y-auto scrollbar-custom preview-content text-slate-200 bg-slate-900/30" style="font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6;">
+            <div id="preview" class="flex-1 p-8 overflow-y-auto scrollbar-custom preview-content text-[var(--text-color)]" style="font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6;">
                 <!-- Preview content will be rendered here -->
             </div>
         </section>
     </main>
 
     <!-- Stats Bar -->
-    <footer class="glass-panel border-t border-slate-700/50 px-6 py-3 flex items-center justify-between shrink-0">
+    <footer class="glass-panel border-t border-[var(--border-color)] px-6 py-3 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-4">
             <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
-                <span class="text-xs font-medium">Words:</span>
+                <span class="text-xs font-medium" style="color: var(--text-color);">Words:</span>
                 <span id="wordCount" class="text-sm font-bold text-indigo-400 font-mono">0</span>
             </div>
             <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-cyan-400"></div>
-                <span class="text-xs font-medium">Sentences:</span>
+                <span class="text-xs font-medium" style="color: var(--text-color);">Sentences:</span>
                 <span id="sentenceCount" class="text-sm font-bold text-cyan-400 font-mono">0</span>
             </div>
             <div class="counter-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-                <span class="text-xs font-medium">Paragraphs:</span>
+                <span class="text-xs font-medium" style="color: var(--text-color);">Paragraphs:</span>
                 <span id="paragraphCount" class="text-sm font-bold text-emerald-400 font-mono">0</span>
             </div>
         </div>
-        <div class="text-xs text-slate-500">
+        <div class="text-xs opacity-50">
             Markdown Pro v2.0
         </div>
     </footer>
@@ -279,6 +360,7 @@ Start typing in the editor to see changes.</textarea>
     </div>
 
     <script>
+        // Initialize Elements
         const markdownInput = document.getElementById('markdownInput');
         const preview = document.getElementById('preview');
         const charCount = document.getElementById('charCount');
@@ -292,13 +374,39 @@ Start typing in the editor to see changes.</textarea>
         const filenameInput = document.getElementById('filenameInput');
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const htmlElement = document.documentElement;
 
+        // Configure Marked for GFM (GitHub Flavored Markdown) to support tables
+        marked.use({
+            gfm: true,
+            breaks: true
+        });
+
+        // --- Theme Logic ---
+        function updateThemeIcons() {
+            const isDark = htmlElement.classList.contains('dark');
+            if (isDark) {
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            updateThemeIcons();
+        });
+
+        // --- Core Logic ---
         function getCleanFilename() {
             let name = filenameInput.value.trim();
-            // Remove extensions if user typed them manually
             name = name.replace(/\.(doc|docx|pdf|txt)$/i, '');
             if (!name) return 'document';
-            // Remove illegal characters for filenames
             return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
         }
 
@@ -320,8 +428,13 @@ Start typing in the editor to see changes.</textarea>
             const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
             paragraphCount.textContent = paragraphs.length;
             
-            // Update preview
-            preview.innerHTML = marked.parse(text);
+            // Update preview safely
+            try {
+                preview.innerHTML = marked.parse(text);
+            } catch (e) {
+                console.error("Markdown parsing error:", e);
+                preview.innerHTML = "<p class='text-red-500'>Error parsing markdown.</p>";
+            }
         }
 
         markdownInput.addEventListener('input', updateCounts);
@@ -352,10 +465,14 @@ Start typing in the editor to see changes.</textarea>
             }, 3000);
         }
 
+        // --- Export Functions ---
+
         // Download as Word
         downloadDocBtn.addEventListener('click', () => {
             const filename = getCleanFilename();
             const content = marked.parse(markdownInput.value);
+            
+            // Use explicit light-theme styles for Word document to ensure readability
             const html = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
                 <head>
@@ -363,17 +480,21 @@ Start typing in the editor to see changes.</textarea>
                     <title>${filename}</title>
                     <style>
                         body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-                        h1 { font-size: 24pt; font-weight: bold; margin-bottom: 12pt; color: #1e293b; }
+                        h1 { font-size: 24pt; font-weight: bold; margin-bottom: 12pt; color: #1e293b; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
                         h2 { font-size: 18pt; font-weight: bold; margin-bottom: 10pt; color: #1e293b; }
                         h3 { font-size: 14pt; font-weight: bold; margin-bottom: 8pt; color: #334155; }
                         p { margin-bottom: 8pt; }
                         pre { background: #f5f5f5; padding: 10pt; font-family: monospace; font-size: 10pt; border: 1px solid #ddd; }
                         code { background: #f5f5f5; padding: 2pt 4pt; font-family: monospace; font-size: 10pt; color: #d93866; }
                         table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }
-                        th, td { border: 1px solid #ccc; padding: 8pt; text-align: left; }
-                        th { background: #f0f0f0; font-weight: bold; }
-                        blockquote { border-left: 4px solid #ccc; margin: 10pt 0; padding-left: 10pt; color: #666; font-style: italic; }
+                        th, td { border: 1px solid #999; padding: 8pt; text-align: left; }
+                        th { background: #e2e8f0; font-weight: bold; color: #000; }
+                        td { background: #fff; }
+                        tr:nth-child(even) td { background: #f8fafc; }
+                        blockquote { border-left: 4px solid #ccc; margin: 10pt 0; padding-left: 10pt; color: #555; font-style: italic; }
                         a { color: #2563eb; text-decoration: underline; }
+                        img { max-width: 100%; }
+                        hr { border: none; border-top: 2px solid #ccc; margin: 15pt 0; }
                     </style>
                 </head>
                 <body>
@@ -397,15 +518,93 @@ Start typing in the editor to see changes.</textarea>
         // Download as PDF
         downloadPdfBtn.addEventListener('click', () => {
             const filename = getCleanFilename();
-            const element = preview;
+            
+            // Temporary clone for PDF generation to ensure light theme styles
+            const clone = preview.cloneNode(true);
+            
+            // Force light mode styles on the clone for the PDF
+            clone.style.backgroundColor = '#ffffff';
+            clone.style.color = '#333333';
+            
+            // Fix table styles for PDF
+            const tables = clone.querySelectorAll('table');
+            tables.forEach(table => {
+                table.style.borderColor = '#cbd5e1';
+                const ths = table.querySelectorAll('th');
+                ths.forEach(th => {
+                    th.style.backgroundColor = '#e2e8f0';
+                    th.style.color = '#0f172a';
+                    th.style.borderColor = '#cbd5e1';
+                });
+                const tds = table.querySelectorAll('td');
+                tds.forEach(td => {
+                    td.style.backgroundColor = '#ffffff';
+                    td.style.color = '#334155';
+                    td.style.borderColor = '#cbd5e1';
+                });
+            });
+
+            // Append clone to body off-screen or use html2pdf directly on element with modified styles
+            // html2pdf can take an element directly. We will modify the preview temporarily.
+            // However, modifying the live preview causes a flash.
+            // Better: html2pdf uses a canvas snapshot. We can change styles via CSS before snapshot if possible, 
+            // but simplest robust way without flash is to append a hidden div with the content.
+            
+            const hiddenDiv = document.createElement('div');
+            hiddenDiv.innerHTML = preview.innerHTML;
+            // Apply classes/styles to hiddenDiv to match the clone logic
+            hiddenDiv.className = 'preview-content';
+            hiddenDiv.style.fontFamily = 'Arial, sans-serif';
+            hiddenDiv.style.fontSize = '11pt';
+            hiddenDiv.style.lineHeight = '1.6';
+            hiddenDiv.style.backgroundColor = '#ffffff';
+            hiddenDiv.style.color = '#333333';
+            hiddenDiv.style.position = 'absolute';
+            hiddenDiv.style.left = '-9999px';
+            hiddenDiv.style.top = '0';
+            hiddenDiv.style.width = '800px'; // Fixed width for better rendering
+            
+            // Re-apply table styles
+            hiddenDiv.querySelectorAll('table').forEach(table => {
+                table.style.borderCollapse = 'collapse';
+                table.style.width = '100%';
+                table.querySelectorAll('th').forEach(th => {
+                    th.style.border = '1px solid #cbd5e1';
+                    th.style.padding = '8px';
+                    th.style.backgroundColor = '#e2e8f0';
+                    th.style.color = '#0f172a';
+                });
+                hiddenDiv.querySelectorAll('td').forEach(td => {
+                    td.style.border = '1px solid #cbd5e1';
+                    td.style.padding = '8px';
+                    td.style.backgroundColor = '#ffffff';
+                    td.style.color = '#334155';
+                });
+            });
+            
+            // Also fix code blocks and other elements
+            hiddenDiv.querySelectorAll('pre').forEach(pre => {
+                pre.style.backgroundColor = '#f5f5f5';
+                pre.style.color = '#333';
+                pre.style.border = '1px solid #ddd';
+                pre.querySelectorAll('code').forEach(c => {
+                    c.style.color = '#333';
+                    c.style.backgroundColor = '#f5f5f5';
+                });
+            });
+
+            document.body.appendChild(hiddenDiv);
+
+            showToast(`Generating '${filename}.pdf'...`);
+            
             const opt = {
-                margin: 0.75,
+                margin: 0.5,
                 filename: `${filename}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2,
                     useCORS: true,
-                    backgroundColor: '#ffffff' // White background for PDF
+                    backgroundColor: '#ffffff'
                 },
                 jsPDF: { 
                     unit: 'in', 
@@ -414,11 +613,11 @@ Start typing in the editor to see changes.</textarea>
                 }
             };
             
-            showToast(`Generating '${filename}.pdf'...`);
-            
-            html2pdf().set(opt).from(element).save().then(() => {
+            html2pdf().set(opt).from(hiddenDiv).save().then(() => {
+                document.body.removeChild(hiddenDiv);
                 showToast(`PDF '${filename}.pdf' downloaded!`);
             }).catch(err => {
+                document.body.removeChild(hiddenDiv);
                 showToast('PDF generation failed!', 'error');
                 console.error(err);
             });
@@ -440,7 +639,8 @@ Start typing in the editor to see changes.</textarea>
             showToast(`TXT file '${filename}.txt' downloaded!`);
         });
 
-        // Initialize
+        // Initial Run
+        updateThemeIcons();
         updateCounts();
     </script>
 </body>
